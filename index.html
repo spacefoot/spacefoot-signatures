@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Générateur de signatures</title>
+
+    <meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <style>
+        .footer {
+            background-color: #f5f5f5;
+        }
+    </style>
+
+</head>
+<body class="d-flex flex-column h-100">
+    <main role="main" class="flex-shrink-0">
+        <div class="container">
+            <h1 class="mt-5 mb-5 text-center">Générateur de signatures</h1>
+
+            <div id="app">
+                <div v-if="isLoaded">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group text-center">
+                                <div class="btn-group btn-group-toggle">
+                                    <label class="btn btn-info" v-bind:class="{ active: version === 'spacefoot' }" for="spacefoot">
+                                        <input type="radio" id="spacefoot" value="spacefoot" v-model="version">Spacefoot
+                                    </label>
+                                    <label class="btn btn-info" v-bind:class="{ active: version === 'akcelo' }" for="akcelo">
+                                        <input type="radio" id="akcelo" value="akcelo" v-model="version">Akcelo
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="name">Nom</label>
+                                <input v-model="name" type="text" class="form-control" id="name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="poste">Intitulé de votre poste</label>
+                                <input v-model="poste" type="text" class="form-control" id="poste">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input v-model="email" type="email" class="form-control" id="email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="twitter_url">Adresse postale</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <input v-model="address_enabled" type="checkbox" aria-label="Afficher l'adresse' ?">
+                                </span>
+                                    </div>
+                                    <input v-model="address" id="address" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="twitter_url">Adresse twitter</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <input v-model="twitter_url_enabled" type="checkbox" aria-label="Afficher le lien twitter ?">
+                                </span>
+                                    </div>
+                                    <input type="url" v-model="twitter_url" id="twitter_url" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="twitter_url">Adresse linkedin</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <input v-model="linkedin_url_enabled" type="checkbox" aria-label="Afficher le lien linkedin ?">
+                                </span>
+                                    </div>
+                                    <input type="url" v-model="linkedin_url" id="linkedin_url" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="twitter_url">Téléphone</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <input v-model="phone_number_enabled" type="checkbox" aria-label="Afficher le téléphone ?">
+                                </span>
+                                    </div>
+                                    <input v-model="phone_number" id="phone_number" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="text-center">
+                                <div class="card" style="min-width: 500px;">
+                                    <div class="card-header">Prévisualisation :</div>
+
+                                    <div class="card-body"  v-html="preview">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <button v-on:click="download" class="btn btn-primary btn-block mt-4" style="cursor: pointer">Télécharger la signature</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer mt-5 py-3">
+        <div class="container">
+            <span class="text-muted">Powered by Vue.js and handcrafted by Vincent</span>
+        </div>
+    </footer>
+
+    <script>
+        window.addEventListener("load", function(event) {
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    'isLoaded': false,
+                    'version': 'spacefoot',
+                    'picked': '',
+                    'name': '',
+                    'poste': '',
+                    'email': '',
+                    'twitter_url': '',
+                    'twitter_url_enabled': false,
+                    'linkedin_url': '',
+                    'linkedin_url_enabled': false,
+                    'address_enabled': true,
+                    'phone_number_enabled': true,
+                    'phone_number': '+33 (0)1 48 07 00 25',
+                    'address': '54 Rue de Paradis, 75010 Paris',
+                    'template': `
+        <!doctype html>
+        <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+              xmlns:o="urn:schemas-microsoft-com:office:office">
+        <head>
+            <title>
+
+            </title>
+            <!--[if !mso]> -->
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <!--<![endif]-->
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style type="text/css">
+                #outlook a {
+                    padding: 0;
+                }
+
+                .ReadMsgBody {
+                    width: 100%;
+                }
+
+                .ExternalClass {
+                    width: 100%;
+                }
+
+                .ExternalClass * {
+                    line-height: 100%;
+                }
+
+                table,
+                td {
+                    border-collapse: collapse;
+                    mso-table-lspace: 0pt;
+                    mso-table-rspace: 0pt;
+                }
+
+                img {
+                    border: 0;
+                    height: auto;
+                    line-height: 100%;
+                    outline: none;
+                    text-decoration: none;
+                    -ms-interpolation-mode: bicubic;
+                }
+
+                p {
+                    display: block;
+                    margin: 13px 0;
+                }
+            </style>
+            <!--[if !mso]><!-->
+            <style type="text/css">
+                @media only screen and (max-width:480px) {
+                    @-ms-viewport {
+                        width: 320px;
+                    }
+
+                    @viewport {
+                        width: 320px;
+                    }
+                }
+            </style>
+            <!--<![endif]-->
+            <!--[if mso | IE]><!-->
+            <style type="text/css">
+                @media only screen and (min-width:480px) {
+                    .details-column>table:before {
+                        display: none;
+                    }
+
+                    .details-column>table {
+                        border-left: 2px solid #eeeeee !important;
+                    }
+                }
+            </style>
+            <!--<![endif]-->
+            <!--[if mso]>
+            <xml>
+                <o:OfficeDocumentSettings>
+                    <o:AllowPNG/>
+                    <o:PixelsPerInch>96</o:PixelsPerInch>
+                </o:OfficeDocumentSettings>
+            </xml>
+            <![endif]-->
+            <!--[if lte mso 11]>
+            <style type="text/css">
+                .outlook-group-fix { width:100% !important; }
+            </style>
+            <![endif]-->
+
+
+            <style type="text/css">
+                @media only screen and (min-width:480px) {
+                    .mj-column-per-40 {
+                        width: 40% !important;
+                        max-width: 40%;
+                    }
+
+                    .mj-column-per-60 {
+                        width: 60% !important;
+                        max-width: 60%;
+                    }
+                }
+            </style>
+
+
+            <style type="text/css">
+                @media only screen and (max-width:480px) {
+                    table.full-width-mobile {
+                        width: 100% !important;
+                    }
+
+                    td.full-width-mobile {
+                        width: auto !important;
+                    }
+                }
+            </style>
+            <style type="text/css">
+                a {
+                    text-decoration: none !important;
+                    color: black !important;
+                }
+
+                body>div>div {
+                    margin: 0 !important;
+                }
+
+                .main-title:after {
+                    background-color: %%COLOR%%;
+                    content: "";
+                    margin: 5px 0;
+                    display: block;
+                    width: 20%;
+                    height: 5px;
+                }
+
+                .details-column span {
+                    width: 25px;
+                    display: inline-block;
+                    text-align: center;
+                }
+
+                .details-column img {
+                    vertical-align: middle;
+                }
+
+                @media (min-width:480px) {
+                    .details-column>table {
+                        position: relative;
+                    }
+
+                    .details-column>table:before {
+                        content: "";
+                        position: absolute;
+                        top: 15%;
+                        bottom: 15%;
+                        border-left: 2px solid #eeeeee !important;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .logo-column td {
+                        text-align: left;
+                    }
+
+                    .details-column {
+                        margin-top: 30px;
+                    }
+                }
+            </style>
+        </head>
+
+        <body id="body">
+
+
+        <div style="">
+            <!--[if mso | IE]>
+            <table align="center" border="0" cellpadding="0" cellspacing="0" class="" style="width:600px;" width="600">
+                <tr>
+                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+            <![endif]-->
+
+
+            <div style="max-width:600px;">
+
+                <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+                    <tbody>
+                    <tr>
+                        <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;vertical-align:top;">
+                            <!--[if mso | IE]>
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+
+                                <tr>
+
+                                    <td
+                                            class="logo-column-outlook" style="vertical-align:middle;width:240px;"
+                                    >
+                            <![endif]-->
+
+                            <div class="mj-column-per-40 outlook-group-fix logo-column"
+                                 style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
+
+                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                    <tbody>
+                                    <tr>
+                                        <td style="vertical-align:middle;padding-right:30px;padding-left:50px;">
+
+                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation"
+                                                   style="" width="100%">
+
+                                                <tr>
+                                                    <td align="left"
+                                                        style="font-size:0px;padding:0px;padding-top:10px;padding-bottom:10px;word-break:break-word;">
+
+                                                        <table border="0" cellpadding="0" cellspacing="0"
+                                                               role="presentation"
+                                                               style="border-collapse:collapse;border-spacing:0px;">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td style="width:130px;">
+
+                                                                    <a href="%%COMPANY_URL%%"
+                                                                       target="_blank">
+
+                                                                        <img height="auto"
+                                                                             src="%%COMPANY_LOGO_URL%%"
+                                                                             style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;"
+                                                                             width="130" />
+
+                                                                    </a>
+
+                                                                </td>
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+
+                                                    </td>
+                                                </tr>
+
+                                            </table>
+
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                            <!--[if mso | IE]>
+                            </td>
+
+                            <td
+                                    class="details-column-outlook" style="vertical-align:middle;width:360px;"
+                            >
+                            <![endif]-->
+
+                            <div class="mj-column-per-60 outlook-group-fix details-column"
+                                 style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
+
+                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                    <tbody>
+                                    <tr>
+                                        <td style="vertical-align:middle;padding-left:50px;">
+
+                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation"
+                                                   style="" width="100%">
+
+                                                <tr>
+                                                    <td align="left" class="main-title"
+                                                        style="font-size:0px;padding:0px;word-break:break-word;">
+
+                                                        <div
+                                                                style="font-family:Poppins, sans-serif;font-size:24px;font-weight:700;letter-spacing:-1px;line-height:28px;text-align:left;color:#29292A;">
+                                                            %%NAME%%</div>
+
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td align="left"
+                                                        style="font-size:0px;padding:0px;word-break:break-word;">
+
+                                                        <div
+                                                                style="font-family:Poppins, sans-serif;font-size:12px;font-weight:300;line-height:28px;text-align:left;color:#29292A;">
+                                                            %%POSTE%%</div>
+
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td style="font-size:0px;word-break:break-word;">
+
+
+                                                        <!--[if mso | IE]>
+
+                                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td height="10" style="vertical-align:top;height:10px;">
+
+                                                        <![endif]-->
+
+                                                        <div style="height:10px;">
+                                                            &nbsp;
+                                                        </div>
+
+                                                        <!--[if mso | IE]>
+
+                                                        </td></tr></table>
+
+                                                        <![endif]-->
+
+
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td align="left"
+                                                        style="font-size:0px;padding:0px;word-break:break-word;">
+
+                                                        <div
+                                                                style="font-family:Poppins, sans-serif;font-size:13px;font-weight:400;line-height:28px;text-align:left;color:#29292A;">
+                                                                <span><img src="%%EMAIL_ICON%%" /></span>
+                                                            <a href="mailto:%%EMAIL%%"
+                                                               style="color: #000000;">%%EMAIL%%</a>
+                                                        </div>
+
+                                                    </td>
+                                                </tr>
+                                                %%PHONE_NUMBER_LINE%%
+                                                %%ADDRESS_LINE%%
+                                                <tr>
+                                                    <td align="left"
+                                                        style="font-size:0px;padding:0px;word-break:break-word;">
+
+                                                        <div
+                                                                style="font-family:Poppins, sans-serif;font-size:13px;font-style:italic;font-weight:700;line-height:28px;text-align:left;color:#29292A;">
+                                                                <span><img src="%%COMPANY_ICON%%" /></span>
+                                                            <a href="%%COMPANY_URL%%"
+                                                               style="color: #000000;">%%COMPANY_NAME%%</a>
+                                                        </div>
+
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td style="font-size:0px;word-break:break-word;">
+
+
+                                                        <!--[if mso | IE]>
+
+                                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td height="10" style="vertical-align:top;height:10px;">
+
+                                                        <![endif]-->
+
+                                                        <div style="height:10px;">
+                                                            &nbsp;
+                                                        </div>
+
+                                                        <!--[if mso | IE]>
+
+                                                        </td></tr></table>
+
+                                                        <![endif]-->
+
+
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td align="left" style="font-size:0px;padding:0px;word-break:break-word;">
+                                                        <!--[if mso | IE]>
+                                                        <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                                            <tr>
+                                                                <td>
+                                                        <![endif]-->
+                                                        <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
+                                                            <tr>
+                                                                <td style="padding:4px;">%%ICON1%%</td>
+                                                                <td style="padding:4px;">%%ICON2%%</td>
+                                                            </tr>
+                                                        </table>
+                                                        <!--[if mso | IE]>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        <![endif]-->
+                                                    </td>
+                                                </tr>
+
+                                            </table>
+
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                            <!--[if mso | IE]>
+                            </td>
+
+                            </tr>
+
+                            </table>
+                            <![endif]-->
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+
+            <!--[if mso | IE]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+
+
+        </div>
+
+        </body>
+
+        </html>
+                    `,
+                    spacefoot: {
+                        'email_icon': 'https://www.spacefoot.com/email-signature/mail.png',
+                        'phone_icon': 'https://www.spacefoot.com/email-signature/phone.png',
+                        'address_icon': 'https://www.spacefoot.com/email-signature/location.png',
+                        'company_icon': 'https://www.spacefoot.com/email-signature/fusee.png',
+                        'company_url': 'https://www.spacefoot.com',
+                        'company_name': 'spacefoot.com',
+                        'logo_url': 'https://www.spacefoot.com/email-signature/spacefoot.png',
+                        'color': '#F8C70B',
+                        'linkedin_icon': 'https://www.spacefoot.com/email-signature/linkedin.png',
+                        'twitter_icon': 'https://www.spacefoot.com/email-signature/twitter.png'
+                    },
+                    akcelo: {
+                        'email_icon': 'https://www.spacefoot.com/email-signature/mail2.png',
+                        'phone_icon': 'https://www.spacefoot.com/email-signature/phone2.png',
+                        'address_icon': 'https://www.spacefoot.com/email-signature/location2.png',
+                        'company_icon': 'https://www.spacefoot.com/email-signature/fusee2.png',
+                        'company_url': 'https://akcelo.io',
+                        'company_name': 'akcelo.io',
+                        'logo_url': 'https://www.spacefoot.com/email-signature/akcelo.png',
+                        'color': '#17BCA0',
+                        'linkedin_icon': 'https://www.spacefoot.com/email-signature/linkedin2.png',
+                        'twitter_icon': 'https://www.spacefoot.com/email-signature/twitter2.png'
+                    },
+                },
+                methods: {
+                    getFilledSignature: function() {
+                        if (this.template) {
+                            var html = this.template;
+
+                            html = html.replace(/%%NAME%%/g, this.name);
+                            html = html.replace(/%%EMAIL%%/g, this.email);
+                            html = html.replace('%%POSTE%%', this.poste);
+
+                            if (this.version === 'spacefoot') {
+                                html = html.replace(/%%EMAIL_ICON%%/g, this.spacefoot.email_icon);
+                                html = html.replace(/%%PHONE_ICON%%/g, this.spacefoot.phone_icon);
+                                html = html.replace(/%%ADDRESS_ICON%%/g, this.spacefoot.address_icon);
+                                html = html.replace(/%%COMPANY_ICON%%/g, this.spacefoot.company_icon);
+                                html = html.replace(/%%COMPANY_NAME%%/g, this.spacefoot.company_name);
+                                html = html.replace(/%%COMPANY_URL%%/g, this.spacefoot.company_url);
+                                html = html.replace(/%%COMPANY_LOGO_URL%%/g, this.spacefoot.logo_url);
+                                html = html.replace(/%%COLOR%%/g, this.spacefoot.color);
+                            } else {
+                                html = html.replace(/%%EMAIL_ICON%%/g, this.akcelo.email_icon);
+                                html = html.replace(/%%PHONE_ICON%%/g, this.akcelo.phone_icon);
+                                html = html.replace(/%%ADDRESS_ICON%%/g, this.akcelo.address_icon);
+                                html = html.replace(/%%COMPANY_ICON%%/g, this.akcelo.company_icon);
+                                html = html.replace(/%%COMPANY_NAME%%/g, this.akcelo.company_name);
+                                html = html.replace(/%%COMPANY_URL%%/g, this.akcelo.company_url);
+                                html = html.replace(/%%COMPANY_LOGO_URL%%/g, this.akcelo.logo_url);
+                                html = html.replace(/%%COLOR%%/g, this.akcelo.color);
+                            }
+
+                            if (this.address_enabled) {
+                                var address_line_template = this.extra_line_template.replace('%%VALUE%%', this.address)
+                                address_line_template = address_line_template.replace('%%ICON%%', this.version === 'spacefoot' ? this.spacefoot.address_icon : this.akcelo.address_icon);
+                                html = html.replace('%%ADDRESS_LINE%%', address_line_template);
+                            } else {
+                                html = html.replace('%%ADDRESS_LINE%%', '');
+                            }
+
+                            if (this.phone_number_enabled) {
+                                var phone_number_line_template = this.extra_line_template.replace('%%VALUE%%', this.phone_number)
+                                phone_number_line_template = phone_number_line_template.replace('%%ICON%%', this.version === 'spacefoot' ? this.spacefoot.phone_icon : this.akcelo.phone_icon);
+                                html = html.replace('%%PHONE_NUMBER_LINE%%', phone_number_line_template);
+                            } else {
+                                html = html.replace('%%PHONE_NUMBER_LINE%%', '');
+                            }
+
+                            var linkedin_link = '';
+
+                            if (this.linkedin_url_enabled) {
+                                linkedin_link = this.social_template.replace('%%URL%%', this.linkedin_url);
+                                linkedin_link = linkedin_link.replace('%%ICON%%', this.version === 'spacefoot' ? this.spacefoot.linkedin_icon : this.akcelo.linkedin_icon);
+
+                                html = html.replace('%%ICON1%%', linkedin_link);
+                            }
+
+                            var twitter_link = '';
+
+                            const icon_placeholder = this.linkedin_url_enabled === true ? '%%ICON2%%' : '%%ICON1%%';
+                            if (this.twitter_url_enabled) {
+                                twitter_link = this.social_template.replace('%%URL%%', this.twitter_url);
+                                twitter_link = twitter_link.replace('%%ICON%%', this.version === 'spacefoot' ? this.spacefoot.twitter_icon : this.akcelo.twitter_icon)
+                            }
+
+                            html = html.replace(icon_placeholder, twitter_link);
+                            html = html.replace('%%ICON1%%', '');
+                            html = html.replace('%%ICON2%%', '');
+
+                            return html;
+                        }
+                        else {
+                            return '';
+                        }
+                    },
+                    download: function() {
+                        var html = this.getFilledSignature();
+                        var link = document.createElement('a');
+                        link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(html));
+                        link.setAttribute('download', this.version === 'akcelo' ? 'signature-akcelo.html' : 'signature-spacefoot.html');
+
+                        if (document.createEvent) {
+                            var event = document.createEvent('MouseEvents');
+                            event.initEvent('click', true, true);
+                            link.dispatchEvent(event);
+                        }
+                        else {
+                            link.click();
+                        }
+                    }
+                },
+                mounted: function () {
+                    this.social_template = document.getElementById('social-template').innerHTML;
+                    this.extra_line_template = document.getElementById('extra_line_template').innerHTML;
+                    this.isLoaded = true;
+                },
+                computed: {
+                    preview: function () {
+                        return this.getFilledSignature();
+                    },
+                },
+            })
+        });
+    </script>
+
+    <template id="social-template">
+        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-radius:3px;width:20px;">
+            <tr>
+                <td style="font-size:0;height:20px;vertical-align:middle;width:20px;">
+                    <a href="%%URL%%" target="_blank">
+                        <img height="20" src="%%ICON%%" style="border-radius:3px;" width="20" />
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </template>
+
+    <template id="extra_line_template">
+        <tr>
+            <td align="left" style="font-size:0px;padding:0px;word-break:break-word;">
+                <div style="font-family:Poppins, sans-serif;font-size:13px;font-weight:400;line-height:28px;text-align:left;color:#29292A;">
+                    <span><img src="%%ICON%%" /></span>%%VALUE%%
+                </div>
+            </td>
+        </tr>
+    </template>
+</body>
+</html>
