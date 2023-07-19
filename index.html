@@ -137,13 +137,14 @@
                                 <div class="col px-0">
                                     <label for="facultative">Facultatif</label>
                                     <div class="input-group mb-3">
-                                        <input v-model="facultative" id="facultative" class="form-control">
+                                        <input v-model="facultative" id="facultative" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0">
                                     </div>
                                 </div>
                                 <div class="col col-auto px-0">
-                                <span class="input-group-text">
-                                    <input v-model="facultative_bold" type="checkbox" aria-label="Champ facultatif en gras ?">
-                                </span>
+                                    <label for="facultative_bold">Gras</label>
+                                    <span class="input-group-text" style="height: 38px; margin-left: -1px">
+                                        <input v-model="facultative_bold" id="facultative_bold" type="checkbox" aria-label="Champ facultatif en gras ?">
+                                    </span>
                                 </div>
                             </div>
                         </div>
