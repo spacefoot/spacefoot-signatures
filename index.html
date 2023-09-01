@@ -132,6 +132,21 @@
                                     <input v-model="phone_number" id="phone_number" class="form-control">
                                 </div>
                             </div>
+
+                            <div class="form-group row no-gutters">
+                                <div class="col px-0">
+                                    <label for="facultative">Facultatif</label>
+                                    <div class="input-group mb-3">
+                                        <input v-model="facultative" id="facultative" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0">
+                                    </div>
+                                </div>
+                                <div class="col col-auto px-0">
+                                    <label for="facultative_bold">Gras</label>
+                                    <span class="input-group-text" style="height: 38px; margin-left: -1px">
+                                        <input v-model="facultative_bold" id="facultative_bold" type="checkbox" aria-label="Champ facultatif en gras ?">
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         <div class="col">
                             <div class="text-center">
@@ -182,6 +197,8 @@
                     'phone_number_enabled': true,
                     'phone_number': '+33 (0)1 48 07 00 25',
                     'address': '36 rue Raspail, 92300 Levallois Perret',
+                    'facultative': null,
+                    'facultative_bold': false,
                     'template': `
         <!doctype html>
         <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
@@ -524,6 +541,14 @@
 
                                                     </td>
                                                 </tr>
+                                                <tr>
+                                                    <td align="left"
+                                                        style="font-size:0px;padding:0px;word-break:break-word;">
+                                                        <div style="font-family:Poppins, sans-serif;font-size:13px;font-style:italic;line-height:28px;text-align:left;color:#29292A;">
+                                                            %%FACULTATIVE%%
+                                                        </div>
+                                                    </td>
+                                                </tr>
 
                                                 <tr>
                                                     <td style="font-size:0px;word-break:break-word;">
@@ -710,6 +735,16 @@
                                 html = html.replace('%%ADDRESS_LINE%%', address_line_template);
                             } else {
                                 html = html.replace('%%ADDRESS_LINE%%', '');
+                            }
+
+                            if (this.facultative) {
+                              if (this.facultative_bold) {
+                                html = html.replace('%%FACULTATIVE%%', `<strong>${this.facultative}</strong>`);
+                              } else {
+                                html = html.replace('%%FACULTATIVE%%', this.facultative);
+                              }
+                            } else {
+                              html = html.replace('%%FACULTATIVE%%', '');
                             }
 
                             if (this.phone_number_enabled) {
